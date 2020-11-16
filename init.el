@@ -132,9 +132,9 @@
 
 (use-package counsel
   :bind (("C-M-j" . 'counsel-switch-buffer)
-	 ("C-x b" . counsel-ibuffer)
-	 ("C-x C-f" . counsel-find-file)
-	 ("M-x" . counsel-M-x)
+        ("M-x" . counsel-M-x)
+        ("C-x C-f" . counsel-find-file)
+        ("C-x b" . counsel-ibuffer)
          :map minibuffer-local-map
          ("C-r" . 'counsel-minibuffer-history))
   :config
@@ -345,12 +345,16 @@
 ;; Automatically tangle our Emacs.org config file when we save it
 (defun efs/org-babel-tangle-config ()
   (when (string-equal (buffer-file-name)
-                      (expand-file-name "~/Projects/Code/emacs-from-scratch/Emacs.org"))
+                      (expand-file-name "~/.emacs.d/Emacs.org"))
     ;; Dynamic scoping to the rescue
     (let ((org-confirm-babel-evaluate nil))
       (org-babel-tangle))))
 
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+
+(use-package ox-gfm)
+(eval-after-load "org"
+  '(require 'ox-gfm nil t))
 
 (defun efs/lsp-mode-setup ()
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
@@ -391,9 +395,6 @@
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.0))
 
-;; company-lsp is deprecated
-;; (use-package company-lsp
-;;   :commands commany-lsp)
 (use-package company-box
   :hook (company-mode . company-box-mode))
 
@@ -405,8 +406,8 @@
   ("C-c p" . projectile-command-map)
   :init
   ;; NOTE: Set this to the folder where you keep your Git repos!
-  (when (file-directory-p "/Users/guoweishieh/code")
-    (setq projectile-project-search-path '("/Users/guoweishieh/code")))
+  (when (file-directory-p "~/code")
+    (setq projectile-project-search-path '("~/code")))
   (setq projectile-switch-project-action #'projectile-dired))
 
 (use-package counsel-projectile
@@ -586,7 +587,7 @@
   :config
   (setq company-idle-delay 0)
   (setq company-minimum-prefix-length 1))
-
+ 
 ;; (use-package company-lsp
   ;; :ensure t
   ;; :commands company-lsp)
@@ -617,16 +618,7 @@
 (use-package flycheck
   :init (global-flycheck-mode))
 
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-	 '(flycheck kubel yasnippet yaml-mode which-key vterm visual-fill-column use-package typescript-mode rainbow-delimiters org-bullets lsp-ui lsp-treemacs lsp-ivy ivy-rich helpful go-mode general forge exec-path-from-shell evil-nerd-commenter evil-magit evil-collection eterm-256color eshell-git-prompt doom-themes doom-modeline dired-single dired-open dired-hide-dotfiles counsel-projectile company-box command-log-mode all-the-icons-dired)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+(use-package edit-server
+:config (edit-server-start)
+)
+;; (use-package edit-server-htmlize)

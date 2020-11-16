@@ -161,7 +161,7 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 #+begin_src emacs-lisp
 
 (use-package doom-themes
-  :init (load-theme 'doom-dracula t))
+  :init (load-theme 'doom-gruvbox t))
 
 #+end_src
 
@@ -227,6 +227,9 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 
     (use-package counsel
       :bind (("C-M-j" . 'counsel-switch-buffer)
+            ("M-x" . counsel-M-x)
+            ("C-x C-f" . counsel-find-file)
+            ("C-x b" . counsel-ibuffer)
              :map minibuffer-local-map
              ("C-r" . 'counsel-minibuffer-history))
       :config
@@ -330,9 +333,9 @@ This section contains the basic configuration for =org-mode= plus the configurat
     (setq org-log-into-drawer t)
 
     (setq org-agenda-files
-          '("~/Projects/Code/emacs-from-scratch/OrgFiles/Tasks.org"
-            "~/Projects/Code/emacs-from-scratch/OrgFiles/Habits.org"
-            "~/Projects/Code/emacs-from-scratch/OrgFiles/Birthdays.org"))
+          '("~/OrgFiles/Tasks.org"
+            "~/OrgFiles/Habits.org"
+            "~/OrgFiles/Birthdays.org"))
 
     (require 'org-habit)
     (add-to-list 'org-modules 'org-habit)
@@ -413,28 +416,28 @@ This section contains the basic configuration for =org-mode= plus the configurat
 
     (setq org-capture-templates
       `(("t" "Tasks / Projects")
-        ("tt" "Task" entry (file+olp "~/Projects/Code/emacs-from-scratch/OrgFiles/Tasks.org" "Inbox")
+        ("tt" "Task" entry (file+olp "~/OrgFiles/Tasks.org" "Inbox")
              "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
 
         ("j" "Journal Entries")
         ("jj" "Journal" entry
-             (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+             (file+olp+datetree "~/OrgFiles/Journal.org")
              "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
              ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
              :clock-in :clock-resume
              :empty-lines 1)
         ("jm" "Meeting" entry
-             (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+             (file+olp+datetree "~/OrgFiles/Journal.org")
              "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
              :clock-in :clock-resume
              :empty-lines 1)
 
         ("w" "Workflows")
-        ("we" "Checking Email" entry (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+        ("we" "Checking Email" entry (file+olp+datetree "~/OrgFiles/Journal.org")
              "* Checking Email :email:\n\n%?" :clock-in :clock-resume :empty-lines 1)
 
         ("m" "Metrics Capture")
-        ("mw" "Weight" table-line (file+headline "~/Projects/Code/emacs-from-scratch/OrgFiles/Metrics.org" "Weight")
+        ("mw" "Weight" table-line (file+headline "~/OrgFiles/Metrics.org" "Weight")
          "| %U | %^{Weight} | %^{Notes} |" :kill-buffer t)))
 
     (define-key global-map (kbd "C-c j")
@@ -515,13 +518,21 @@ This snippet adds a hook to =org-mode= buffers so that =efs/org-babel-tangle-con
   ;; Automatically tangle our Emacs.org config file when we save it
   (defun efs/org-babel-tangle-config ()
     (when (string-equal (buffer-file-name)
-                        (expand-file-name "~/Projects/Code/emacs-from-scratch/Emacs.org"))
+                        (expand-file-name "~/.emacs.d/Emacs.org"))
       ;; Dynamic scoping to the rescue
       (let ((org-confirm-babel-evaluate nil))
         (org-babel-tangle))))
 
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 
+#+end_src
+
+** Export 
+#+begin_src emacs-lisp
+
+(use-package ox-gfm)
+(eval-after-load "org"
+  '(require 'ox-gfm nil t))
 #+end_src
 
 * Development
@@ -663,8 +674,8 @@ We also use [[https://github.com/sebastiencs/company-box][company-box]] to furth
     ("C-c p" . projectile-command-map)
     :init
     ;; NOTE: Set this to the folder where you keep your Git repos!
-    (when (file-directory-p "~/Projects/Code")
-      (setq projectile-project-search-path '("~/Projects/Code")))
+    (when (file-directory-p "~/code")
+      (setq projectile-project-search-path '("~/code")))
     (setq projectile-switch-project-action #'projectile-dired))
 
   (use-package counsel-projectile
@@ -945,8 +956,128 @@ Dired is a built-in file manager for Emacs that does some pretty amazing things!
 
 #+end_src
 
-* Applications
+* Magic to make go work
+Still to be cleaned up, but for now, at least LSP is working for Go
+#+begin_src emacs-lisp
 
+;; need this to make dired mode work on directory
+(setq-default dired-listing-switches "-lhvA")
+
+;; copied from hrs
+(defun hrs/append-to-path (path)
+  "Add a path both to the $PATH variable and to Emacs' exec-path."
+  (setenv "PATH" (concat (getenv "PATH") ":" path))
+  (add-to-list 'exec-path path))
+
+(use-package yaml-mode)
+(setq-default tab-width 2)
+
+(setenv "GO111MODULE" "on")
+
+(setenv "GOPATH" "/Users/guoweishieh/code/go")
+(hrs/append-to-path (concat (getenv "GOPATH") "/bin"))
+
+
+(defun custom-go-mode ()
+  (display-line-numbers-mode 1))
+
+(use-package go-mode
+:defer t
+:ensure t
+:mode ("\\.go\\'" . go-mode)
+:init
+  (setq compile-command "echo Building... && go build -v && echo Testing... && go test -v && echo Linter... && golint")  
+  (setq compilation-read-command nil)
+  (add-hook 'go-mode-hook 'custom-go-mode)
+:bind (("M-," . compile)
+("M-." . godef-jump)))
+
+(setq compilation-window-height 14)
+(defun my-compilation-hook ()
+  (when (not (get-buffer-window "*compilation*"))
+    (save-selected-window
+      (save-excursion
+	(let* ((w (split-window-vertically))
+	       (h (window-height w)))
+	  (select-window w)
+	  (switch-to-buffer "*compilation*")
+	  (shrink-window (- h compilation-window-height)))))))
+(add-hook 'compilation-mode-hook 'my-compilation-hook)
+
+(global-set-key (kbd "C-c C-c") 'comment-or-uncomment-region)
+(setq compilation-scroll-output t)
+
+(use-package lsp-mode
+  :ensure t
+  :commands (lsp lsp-deferred)
+  :hook (go-mode . lsp-deferred))
+
+;;Set up before-save hooks to format buffer and add/delete imports.
+;;Make sure you don't have other gofmt/goimports hooks enabled.
+
+(defun lsp-go-install-save-hooks ()
+  (add-hook 'before-save-hook #'lsp-format-buffer t t)
+  (add-hook 'before-save-hook #'lsp-organize-imports t t))
+(add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
+
+;;Optional - provides fancier overlays.
+
+(use-package lsp-ui
+  :ensure t
+  :commands lsp-ui-mode
+  :init
+)
+
+;;Company mode is a standard completion package that works well with lsp-mode.
+;;company-lsp integrates company mode completion with lsp-mode.
+;;completion-at-point also works out of the box but doesn't support snippets.
+
+(use-package company
+  :ensure t
+  :config
+  (setq company-idle-delay 0)
+  (setq company-minimum-prefix-length 1))
+ 
+;; (use-package company-lsp
+  ;; :ensure t
+  ;; :commands company-lsp)
+
+;;Optional - provides snippet support.
+
+(use-package yasnippet
+  :ensure t
+  :commands yas-minor-mode
+  :hook (go-mode . yas-minor-mode))
+
+;;lsp-ui-doc-enable is false because I don't like the popover that shows up on the right
+;;I'll change it if I want it back
+
+
+(setq lsp-ui-doc-enable nil
+      lsp-ui-peek-enable t
+      lsp-ui-sideline-enable t
+      lsp-ui-imenu-enable t
+      lsp-ui-flycheck-enable t)
+
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
+
+(setq lsp-go-gopls-server-args '("-remote" "127.0.0.1:9999"))
+(use-package kubel)
+(use-package let-alist)
+(use-package flycheck
+  :init (global-flycheck-mode))
+
+#+end_src
+* Applications
+** Chrome Edit Server
+#+begin_src emacs-lisp
+(use-package edit-server
+:config (edit-server-start)
+)
+;; (use-package edit-server-htmlize)
+
+#+end_src
 ** Some App
 
 This is an example of configuring another non-Emacs application using org-mode.  Not only do we write out the configuration at =.config/some-app/config=, we also compute the value that gets stored in this configuration from the Emacs Lisp block above it.
