@@ -521,73 +521,6 @@
 (use-package yaml-mode)
 (setq-default tab-width 2)
 
-;; (use-package vscode-dark-plus-theme
-  ;; :config
-  ;; (load-theme 'vscode-dark-plus t))
-
-;; (setq lsp-eldoc-render-all t)
-;; (setq lsp-gopls-complete-unimported t)
-
-;; (setq lsp-ui-doc-enable nil
-;;       lsp-ui-peek-enable t
-;;       lsp-ui-sideline-enable t
-;;       lsp-ui-imenu-enable t
-;;       lsp-ui-flycheck-enable t)
-
-;; (use-package go-mode
-;;   :defer t
-;;   :mode ("\\.go\\'" . go-mode)
-;;   :hook (go-mode . lsp-deferred)
-;;   :init
-;;   (setq compile-command "echo Building... && go build -v && echo Testing... && go test -v && echo Linter... && golint")  
-;;   (setq compilation-read-command nil)
-;;   ;;  (add-hook 'go-mode-hook 'custom-go-mode)
-;;   :bind (("M-," . compile)
-;; 	 ("M-." . godef-jump)))
-
-;; (defun lsp-go-install-save-hooks ()
-;;   (add-hook 'before-save-hook #'lsp-format-buffer t t)
-;;   (add-hook 'before-save-hook #'lsp-organize-imports t t))
-;; (add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
-
-;; ;; ;; the following are for golang
-;; ;; (use-package go-mode)
-;; (use-package go-errcheck)
-;; (use-package company-go)
-
-;; (setenv "GOPATH" "/Users/guoweishieh/code/go")
-;; (hrs/append-to-path (concat (getenv "GOPATH") "/bin"))
-
-;; (setq gofmt-command "goimports")
-;; (add-hook 'before-save-hook 'gofmt-before-save)
-
-;; (add-hook 'go-mode-hook
-;;           (lambda ()
-;;             (set (make-local-variable 'company-backends)
-;;                  '(company-go))
-;;             (company-mode)
-;;             (if (not (string-match "go" compile-command))
-;;                 (set (make-local-variable 'compile-command)
-;;                      "go build -v && go test -v && go vet"))
-;;             (flycheck-mode)))
-
-;; (defun my-go-mode-hook ()
-;;   ; Call Gofmt before saving
-;;   (add-hook 'before-save-hook 'gofmt-before-save)
-;;   ; Godef jump key binding
-;;   (local-set-key (kbd "M-.") 'godef-jump)
-;;   (local-set-key (kbd "M-*") 'pop-tag-mark)
-;;   )
-;; (add-hook 'go-mode-hook 'my-go-mode-hook)
-
-;; (defun auto-complete-for-go ()
-;;   (auto-complete-mode 1))
-;; (add-hook 'go-mode-hook 'auto-complete-for-go)
-
-;; (use-package flycheck-golangci-lint
-;;   :ensure t
-;;   :hook (go-mode . flycheck-golangci-lint-setup))
-
 (setenv "GO111MODULE" "on")
 
 (setenv "GOPATH" "/Users/guoweishieh/code/go")
@@ -679,3 +612,17 @@
   (exec-path-from-shell-initialize))
 
 (setq lsp-go-gopls-server-args '("-remote" "127.0.0.1:9999"))
+(use-package kubel)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+	 '(kubel yasnippet yaml-mode which-key vterm visual-fill-column use-package typescript-mode rainbow-delimiters org-bullets lsp-ui lsp-treemacs lsp-ivy ivy-rich helpful go-mode general forge exec-path-from-shell evil-nerd-commenter evil-magit evil-collection eterm-256color eshell-git-prompt doom-themes doom-modeline dired-single dired-open dired-hide-dotfiles counsel-projectile company-box command-log-mode all-the-icons-dired)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
