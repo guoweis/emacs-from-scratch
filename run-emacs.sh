@@ -5,4 +5,6 @@
 # necessary tweaks in stream-tweaks.el that are only meant for use in the live
 # stream.
 
-emacs -Q --load stream-tweaks.el --load init.el Emacs.org
+export HOME=/Users/guoweishieh/emacshome
+# emacs -Q --load stream-tweaks.el --load init.el Emacs.org
+emacs -Q --load init.el init.el
