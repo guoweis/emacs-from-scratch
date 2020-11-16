@@ -94,7 +94,7 @@
 (use-package command-log-mode)
 
 (use-package doom-themes
-  :init (load-theme 'doom-oceanic-next t))
+  :init (load-theme 'doom-gruvbox t))
 
 (use-package all-the-icons)
 
@@ -202,9 +202,9 @@
   (setq org-log-into-drawer t)
 
   (setq org-agenda-files
-        '("~/emacs-from-scratch/OrgFiles/Tasks.org"
-          "~/emacs-from-scratch/OrgFiles/Habits.org"
-          "~/emacs-from-scratch/OrgFiles/Birthdays.org"))
+        '("~/OrgFiles/Tasks.org"
+          "~/OrgFiles/Habits.org"
+          "~/OrgFiles/Birthdays.org"))
 
   (require 'org-habit)
   (add-to-list 'org-modules 'org-habit)
@@ -285,28 +285,28 @@
 
   (setq org-capture-templates
     `(("t" "Tasks / Projects")
-      ("tt" "Task" entry (file+olp "~/Projects/Code/emacs-from-scratch/OrgFiles/Tasks.org" "Inbox")
+      ("tt" "Task" entry (file+olp "~/OrgFiles/Tasks.org" "Inbox")
            "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
 
       ("j" "Journal Entries")
       ("jj" "Journal" entry
-           (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+           (file+olp+datetree "~/OrgFiles/Journal.org")
            "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
            ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
            :clock-in :clock-resume
            :empty-lines 1)
       ("jm" "Meeting" entry
-           (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+           (file+olp+datetree "~/OrgFiles/Journal.org")
            "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
            :clock-in :clock-resume
            :empty-lines 1)
 
       ("w" "Workflows")
-      ("we" "Checking Email" entry (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+      ("we" "Checking Email" entry (file+olp+datetree "~/OrgFiles/Journal.org")
            "* Checking Email :email:\n\n%?" :clock-in :clock-resume :empty-lines 1)
 
       ("m" "Metrics Capture")
-      ("mw" "Weight" table-line (file+headline "~/Projects/Code/emacs-from-scratch/OrgFiles/Metrics.org" "Weight")
+      ("mw" "Weight" table-line (file+headline "~/OrgFiles/Metrics.org" "Weight")
        "| %U | %^{Weight} | %^{Notes} |" :kill-buffer t)))
 
   (define-key global-map (kbd "C-c j")
@@ -613,13 +613,17 @@
 
 (setq lsp-go-gopls-server-args '("-remote" "127.0.0.1:9999"))
 (use-package kubel)
+(use-package let-alist)
+(use-package flycheck
+  :init (global-flycheck-mode))
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-	 '(kubel yasnippet yaml-mode which-key vterm visual-fill-column use-package typescript-mode rainbow-delimiters org-bullets lsp-ui lsp-treemacs lsp-ivy ivy-rich helpful go-mode general forge exec-path-from-shell evil-nerd-commenter evil-magit evil-collection eterm-256color eshell-git-prompt doom-themes doom-modeline dired-single dired-open dired-hide-dotfiles counsel-projectile company-box command-log-mode all-the-icons-dired)))
+	 '(flycheck kubel yasnippet yaml-mode which-key vterm visual-fill-column use-package typescript-mode rainbow-delimiters org-bullets lsp-ui lsp-treemacs lsp-ivy ivy-rich helpful go-mode general forge exec-path-from-shell evil-nerd-commenter evil-magit evil-collection eterm-256color eshell-git-prompt doom-themes doom-modeline dired-single dired-open dired-hide-dotfiles counsel-projectile company-box command-log-mode all-the-icons-dired)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
