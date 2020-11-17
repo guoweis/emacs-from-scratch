@@ -20,7 +20,18 @@ The following variables are used to tweak some of the configuration pieces for u
 
 #+end_src
 
-* Default 
+* Use =sensible-defaults.el=
+
+Use [[https://github.com/hrs/sensible-defaults.el][sensible-defaults.el]] for some basic settings.
+
+#+begin_src emacs-lisp
+  (load-file "~/code/personal/sensible-defaults.el/sensible-defaults.el")
+  (sensible-defaults/use-all-settings)
+  (sensible-defaults/use-all-keybindings)
+  (sensible-defaults/backup-to-temp-directory)
+#+end_src
+
+
 #+begin_src emacs-lisp
 (setq-default
  ad-redefinition-action 'accept                   ; Silence warnings for redefinition
@@ -42,7 +53,7 @@ The following variables are used to tweak some of the configuration pieces for u
  select-enable-clipboard t                        ; Merge system's and Emacs' clipboard
  sentence-end-double-space nil                    ; Use a single space after dots
  show-help-function nil                           ; Disable help text everywhere
- tab-width 4                                      ; Set width for tabs
+ tab-width 2                                      ; Set width for tabs
  uniquify-buffer-name-style 'forward              ; Uniquify buffer names
  window-combination-resize t                      ; Resize windows proportionally
  window-divider-default-right-width 2             ; Thin window vertical dividers
@@ -177,6 +188,25 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
     :config
     (evil-collection-init))
 
+  (use-package evil-surround
+    :config
+    (global-evil-surround-mode 1))
+
+#+end_src
+
+The default frame title isn't useful. This binds it to the name of the current
+project:
+
+#+begin_src emacs-lisp
+  (setq frame-title-format '((:eval (projectile-project-name))))
+#+end_src
+
+** Use fancy lambdas
+
+Why not?
+
+#+begin_src emacs-lisp
+  (global-prettify-symbols-mode t)
 #+end_src
 
 * UI Configuration
@@ -309,6 +339,28 @@ This is an example of using [[https://github.com/abo-abo/hydra][Hydra]] to desig
   (rune/leader-keys
     "ts" '(hydra-text-scale/body :which-key "scale text"))
 
+#+end_src
+
+** Highlight the current line
+
+=global-hl-line-mode= softly highlights the background color of the line
+containing point. It makes it a bit easier to find point, and it's useful when
+pairing or presenting code.
+
+#+begin_src emacs-lisp
+  (global-hl-line-mode)
+#+end_src
+
+** Highlight uncommitted changes
+
+Use the =diff-hl= package to highlight changed-and-uncommitted lines when
+programming.
+
+#+begin_src emacs-lisp
+  (use-package diff-hl
+    :config
+    (add-hook 'prog-mode-hook 'turn-on-diff-hl-mode)
+    (add-hook 'vc-dir-mode-hook 'turn-on-diff-hl-mode))
 #+end_src
 
 * Org Mode
@@ -564,7 +616,7 @@ This snippet adds a hook to =org-mode= buffers so that =efs/org-babel-tangle-con
 
 #+end_src
 
-** Export 
+** Export
 #+begin_src emacs-lisp
 
 (use-package ox-gfm)
@@ -697,7 +749,7 @@ We also use [[https://github.com/sebastiencs/company-box][company-box]] to furth
 
 #+end_src
 
-** Search 
+** Search
 
 #+begin_src emacs-lisp
   (use-package ag)
@@ -939,7 +991,7 @@ Dired is a built-in file manager for Emacs that does some pretty amazing things!
 - =*= - Lots of other auto-marking functions
 - =k= / =K= - "Kill" marked items (refresh buffer with =g= / =g r= to get them back)
 - Many operations can be done on a single file if there are no active marks!
- 
+
 **** Copying and Renaming files
 
 - =C= - Copy marked files (or if no files are marked, the current file)
@@ -1012,15 +1064,13 @@ Still to be cleaned up, but for now, at least LSP is working for Go
 
 ;; need this to make dired mode work on directory
 (setq-default dired-listing-switches "-lhvA")
-
-;; copied from hrs
+; copied from hrs
 (defun hrs/append-to-path (path)
   "Add a path both to the $PATH variable and to Emacs' exec-path."
   (setenv "PATH" (concat (getenv "PATH") ":" path))
   (add-to-list 'exec-path path))
 
 (use-package yaml-mode)
-(setq-default tab-width 2)
 
 (setenv "GO111MODULE" "on")
 
@@ -1036,7 +1086,7 @@ Still to be cleaned up, but for now, at least LSP is working for Go
 :ensure t
 :mode ("\\.go\\'" . go-mode)
 :init
-  (setq compile-command "echo Building... && go build -v && echo Testing... && go test -v && echo Linter... && golint")  
+  (setq compile-command "echo Building... && go build -v && echo Testing... && go test -v && echo Linter... && golint")
   (setq compilation-read-command nil)
   (add-hook 'go-mode-hook 'custom-go-mode)
 :bind (("M-," . compile)
@@ -1087,7 +1137,7 @@ Still to be cleaned up, but for now, at least LSP is working for Go
   :config
   (setq company-idle-delay 0)
   (setq company-minimum-prefix-length 1))
- 
+
 ;; (use-package company-lsp
   ;; :ensure t
   ;; :commands company-lsp)
@@ -1131,7 +1181,7 @@ Still to be cleaned up, but for now, at least LSP is working for Go
 
 
 #+end_src
-* Email 
+* Email
 
 #+begin_src emacs-lisp
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu/mu4e")
@@ -1224,6 +1274,59 @@ This is an example of configuring another non-Emacs application using org-mode. 
 
 #+end_src
 
+* Editing settings
+** Always kill current buffer
+
+Assume that I always want to kill the current buffer when hitting =C-x k=.
+
+#+begin_src emacs-lisp
+  (defun hrs/kill-current-buffer ()
+    "Kill the current buffer without prompting."
+    (interactive)
+    (kill-buffer (current-buffer)))
+
+  (global-set-key (kbd "C-x k") 'hrs/kill-current-buffer)
+#+end_src
+
+** Add a bunch of engines for =engine-mode=
+
+Enable [[https://github.com/hrs/engine-mode][engine-mode]] and define a few useful engines.
+
+#+begin_src emacs-lisp
+  (use-package engine-mode)
+  (require 'engine-mode)
+
+  (defengine duckduckgo
+    "https://duckduckgo.com/?q=%s"
+    :keybinding "d")
+
+  (defengine github
+    "https://github.com/search?ref=simplesearch&q=%s"
+    :keybinding "h")
+
+  (defengine google
+    "http://www.google.com/search?ie=utf-8&oe=utf-8&q=%s"
+    :keybinding "g")
+
+  (defengine rfcs
+    "http://pretty-rfc.herokuapp.com/search?q=%s")
+
+  (defengine stack-overflow
+    "https://stackoverflow.com/search?q=%s"
+    :keybinding "s")
+
+  (defengine wikipedia
+    "http://www.wikipedia.org/search-redirect.php?language=en&go=Go&search=%s"
+    :keybinding "w")
+
+  (defengine wiktionary
+    "https://www.wikipedia.org/search-redirect.php?family=wiktionary&language=en&go=Go&search=%s")
+
+  (defengine youtube
+    "https://www.youtube.com/results?search_query=%s")
+
+  (engine-mode t)
+#+end_src
+
 * Issues
-** ag doesn't work, need to be able to search inside a project
 ** kubectl doesn't work fast enough, probably need hydra

@@ -5,6 +5,11 @@
 (defvar efs/default-font-size 180)
 (defvar efs/default-variable-font-size 180)
 
+(load-file "~/code/personal/sensible-defaults.el/sensible-defaults.el")
+(sensible-defaults/use-all-settings)
+(sensible-defaults/use-all-keybindings)
+(sensible-defaults/backup-to-temp-directory)
+
 (setq-default
  ad-redefinition-action 'accept                   ; Silence warnings for redefinition
  auto-save-list-file-prefix nil                   ; Prevent tracking for auto-saves
@@ -25,7 +30,7 @@
  select-enable-clipboard t                        ; Merge system's and Emacs' clipboard
  sentence-end-double-space nil                    ; Use a single space after dots
  show-help-function nil                           ; Disable help text everywhere
- tab-width 4                                      ; Set width for tabs
+ tab-width 2                                      ; Set width for tabs
  uniquify-buffer-name-style 'forward              ; Uniquify buffer names
  window-combination-resize t                      ; Resize windows proportionally
  window-divider-default-right-width 2             ; Thin window vertical dividers
@@ -126,6 +131,14 @@
   :config
   (evil-collection-init))
 
+(use-package evil-surround
+  :config
+  (global-evil-surround-mode 1))
+
+(setq frame-title-format '((:eval (projectile-project-name))))
+
+(global-prettify-symbols-mode t)
+
 (use-package command-log-mode)
 
 (use-package doom-themes
@@ -195,6 +208,13 @@
 
 (rune/leader-keys
   "ts" '(hydra-text-scale/body :which-key "scale text"))
+
+(global-hl-line-mode)
+
+(use-package diff-hl
+  :config
+  (add-hook 'prog-mode-hook 'turn-on-diff-hl-mode)
+  (add-hook 'vc-dir-mode-hook 'turn-on-diff-hl-mode))
 
 (defun efs/org-font-setup ()
   ;; Replace list hyphen with dot
@@ -555,15 +575,13 @@
 
 ;; need this to make dired mode work on directory
 (setq-default dired-listing-switches "-lhvA")
-
-;; copied from hrs
+; copied from hrs
 (defun hrs/append-to-path (path)
   "Add a path both to the $PATH variable and to Emacs' exec-path."
   (setenv "PATH" (concat (getenv "PATH") ":" path))
   (add-to-list 'exec-path path))
 
 (use-package yaml-mode)
-(setq-default tab-width 2)
 
 (setenv "GO111MODULE" "on")
 
@@ -579,7 +597,7 @@
 :ensure t
 :mode ("\\.go\\'" . go-mode)
 :init
-  (setq compile-command "echo Building... && go build -v && echo Testing... && go test -v && echo Linter... && golint")  
+  (setq compile-command "echo Building... && go build -v && echo Testing... && go test -v && echo Linter... && golint")
   (setq compilation-read-command nil)
   (add-hook 'go-mode-hook 'custom-go-mode)
 :bind (("M-," . compile)
@@ -630,7 +648,7 @@
   :config
   (setq company-idle-delay 0)
   (setq company-minimum-prefix-length 1))
- 
+
 ;; (use-package company-lsp
   ;; :ensure t
   ;; :commands company-lsp)
@@ -732,3 +750,44 @@
 :config (edit-server-start)
 )
 ;; (use-package edit-server-htmlize)
+
+(defun hrs/kill-current-buffer ()
+  "Kill the current buffer without prompting."
+  (interactive)
+  (kill-buffer (current-buffer)))
+
+(global-set-key (kbd "C-x k") 'hrs/kill-current-buffer)
+
+(use-package engine-mode)
+(require 'engine-mode)
+
+(defengine duckduckgo
+  "https://duckduckgo.com/?q=%s"
+  :keybinding "d")
+
+(defengine github
+  "https://github.com/search?ref=simplesearch&q=%s"
+  :keybinding "h")
+
+(defengine google
+  "http://www.google.com/search?ie=utf-8&oe=utf-8&q=%s"
+  :keybinding "g")
+
+(defengine rfcs
+  "http://pretty-rfc.herokuapp.com/search?q=%s")
+
+(defengine stack-overflow
+  "https://stackoverflow.com/search?q=%s"
+  :keybinding "s")
+
+(defengine wikipedia
+  "http://www.wikipedia.org/search-redirect.php?language=en&go=Go&search=%s"
+  :keybinding "w")
+
+(defengine wiktionary
+  "https://www.wikipedia.org/search-redirect.php?family=wiktionary&language=en&go=Go&search=%s")
+
+(defengine youtube
+  "https://www.youtube.com/results?search_query=%s")
+
+(engine-mode t)
