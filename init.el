@@ -5,6 +5,41 @@
 (defvar efs/default-font-size 180)
 (defvar efs/default-variable-font-size 180)
 
+(setq-default
+ ad-redefinition-action 'accept                   ; Silence warnings for redefinition
+ auto-save-list-file-prefix nil                   ; Prevent tracking for auto-saves
+ cursor-in-non-selected-windows nil               ; Hide the cursor in inactive windows
+ cursor-type 'bar                                 ; Prefer a bar-shaped cursor
+ custom-unlispify-menu-entries nil                ; Prefer kebab-case for titles
+ custom-unlispify-tag-names nil                   ; Prefer kebab-case for symbols
+ delete-by-moving-to-trash t                      ; Delete files to trash
+ fill-column 80                                   ; Set width for automatic line breaks
+ gc-cons-threshold (* 8 1024 1024)                ; We're not using Game Boys anymore
+ help-window-select t                             ; Focus new help windows when opened
+ indent-tabs-mode nil                             ; Stop using tabs to indent
+ inhibit-startup-screen t                         ; Disable start-up screen
+ initial-scratch-message ""                       ; Empty the initial *scratch* buffer
+ mouse-yank-at-point t                            ; Yank at point rather than pointer
+ recenter-positions '(5 top bottom)               ; Set re-centering positions
+ scroll-margin 2                                  ; Add a margin when scrolling vertically
+ select-enable-clipboard t                        ; Merge system's and Emacs' clipboard
+ sentence-end-double-space nil                    ; Use a single space after dots
+ show-help-function nil                           ; Disable help text everywhere
+ tab-width 4                                      ; Set width for tabs
+ uniquify-buffer-name-style 'forward              ; Uniquify buffer names
+ window-combination-resize t                      ; Resize windows proportionally
+ window-divider-default-right-width 2             ; Thin window vertical dividers
+ x-stretch-cursor t)                              ; Stretch cursor to the glyph width
+(cd "~/")                                         ; Move to the user directory
+(delete-selection-mode 1)                         ; Replace region when inserting text
+(fset 'yes-or-no-p 'y-or-n-p)                     ; Replace yes/no prompts with y/n
+(global-subword-mode 1)                           ; Iterate through CamelCase words
+(menu-bar-mode 0)                                 ; Disable the menu bar
+(mouse-avoidance-mode 'exile)                     ; Avoid collision of mouse with point
+(put 'downcase-region 'disabled nil)              ; Enable downcase-region
+(put 'upcase-region 'disabled nil)                ; Enable upcase-region
+(set-default-coding-systems 'utf-8)               ; Default to utf-8 encoding
+
 ;; Initialize package sources
 (require 'package)
 
@@ -398,10 +433,13 @@
 (use-package company-box
   :hook (company-mode . company-box-mode))
 
+(use-package ag)
+
 (use-package projectile
   :diminish projectile-mode
   :config (projectile-mode)
   :custom ((projectile-completion-system 'ivy))
+  :bind ("C-c v" . 'projectile-ag)
   :bind-keymap
   ("C-c p" . projectile-command-map)
   :init
@@ -413,6 +451,7 @@
 (use-package counsel-projectile
   :config (counsel-projectile-mode))
 
+(use-package git-link)
 (use-package magit
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
@@ -613,12 +652,37 @@
   (exec-path-from-shell-initialize))
 
 (setq lsp-go-gopls-server-args '("-remote" "127.0.0.1:9999"))
-(use-package kubel)
 (use-package let-alist)
 (use-package flycheck
   :init (global-flycheck-mode))
+
+(use-package kubel)
+(rune/leader-keys
+  "kx" '(kubel-set-context :which-key "set context")
+  "kn" '(kubel-set-namespace :which-key "set namespace")
+  "ke" '(kubel-quick-edit :which-key "quick edit")
+)
+
+(use-package restclient)
 
 (use-package edit-server
 :config (edit-server-start)
 )
 ;; (use-package edit-server-htmlize)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("db7f422324a763cfdea47abf0f931461d1493f2ecf8b42be87bbbbbabf287bfe" "a390bea70629258d80f41a42098bafcc636cd5f29f2449f00a86c1dabf68358d" "776c1ab52648f98893a2aa35af2afc43b8c11dd3194a052e0b2502acca02bfce" default))
+ '(package-selected-packages
+   '(git-link underwater-theme white-sand-theme ubuntu-theme ag restclient edit-server-htmlize edit-server kaolin-themes nord-theme gotham-theme ox-jira ox-gfm yasnippet which-key vterm visual-fill-column use-package typescript-mode rainbow-delimiters org-bullets lsp-ui lsp-treemacs lsp-ivy kubel ivy-rich helpful go-mode general forge flycheck exec-path-from-shell evil-nerd-commenter evil-magit evil-collection eterm-256color eshell-git-prompt doom-themes doom-modeline dired-single dired-open dired-hide-dotfiles counsel-projectile company-box command-log-mode all-the-icons-dired))
+ '(pos-tip-background-color "#DEDAD5")
+ '(pos-tip-foreground-color "#4b5254"))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

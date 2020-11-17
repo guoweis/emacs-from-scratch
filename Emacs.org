@@ -20,6 +20,43 @@ The following variables are used to tweak some of the configuration pieces for u
 
 #+end_src
 
+* Default 
+#+begin_src emacs-lisp
+(setq-default
+ ad-redefinition-action 'accept                   ; Silence warnings for redefinition
+ auto-save-list-file-prefix nil                   ; Prevent tracking for auto-saves
+ cursor-in-non-selected-windows nil               ; Hide the cursor in inactive windows
+ cursor-type 'bar                                 ; Prefer a bar-shaped cursor
+ custom-unlispify-menu-entries nil                ; Prefer kebab-case for titles
+ custom-unlispify-tag-names nil                   ; Prefer kebab-case for symbols
+ delete-by-moving-to-trash t                      ; Delete files to trash
+ fill-column 80                                   ; Set width for automatic line breaks
+ gc-cons-threshold (* 8 1024 1024)                ; We're not using Game Boys anymore
+ help-window-select t                             ; Focus new help windows when opened
+ indent-tabs-mode nil                             ; Stop using tabs to indent
+ inhibit-startup-screen t                         ; Disable start-up screen
+ initial-scratch-message ""                       ; Empty the initial *scratch* buffer
+ mouse-yank-at-point t                            ; Yank at point rather than pointer
+ recenter-positions '(5 top bottom)               ; Set re-centering positions
+ scroll-margin 2                                  ; Add a margin when scrolling vertically
+ select-enable-clipboard t                        ; Merge system's and Emacs' clipboard
+ sentence-end-double-space nil                    ; Use a single space after dots
+ show-help-function nil                           ; Disable help text everywhere
+ tab-width 4                                      ; Set width for tabs
+ uniquify-buffer-name-style 'forward              ; Uniquify buffer names
+ window-combination-resize t                      ; Resize windows proportionally
+ window-divider-default-right-width 2             ; Thin window vertical dividers
+ x-stretch-cursor t)                              ; Stretch cursor to the glyph width
+(cd "~/")                                         ; Move to the user directory
+(delete-selection-mode 1)                         ; Replace region when inserting text
+(fset 'yes-or-no-p 'y-or-n-p)                     ; Replace yes/no prompts with y/n
+(global-subword-mode 1)                           ; Iterate through CamelCase words
+(menu-bar-mode 0)                                 ; Disable the menu bar
+(mouse-avoidance-mode 'exile)                     ; Avoid collision of mouse with point
+(put 'downcase-region 'disabled nil)              ; Enable downcase-region
+(put 'upcase-region 'disabled nil)                ; Enable upcase-region
+(set-default-coding-systems 'utf-8)               ; Default to utf-8 encoding
+#+end_src
 * Tips for Use
 
 In this document I've added links in many places that lead you to documentation for the various packages we use.  If you're looking at this file in Emacs, you can put your cursor on a link and press =C-c C-o= or run =M-x org-open-at-point= to open the link in your web browser.
@@ -660,6 +697,13 @@ We also use [[https://github.com/sebastiencs/company-box][company-box]] to furth
 
 #+end_src
 
+** Search 
+
+#+begin_src emacs-lisp
+  (use-package ag)
+#+end_src
+
+
 ** Projectile
 
 [[https://projectile.mx/][Projectile]] is a project management library for Emacs which makes it a lot easier to navigate around code projects for various languages.  Many packages integrate with Projectile so it's a good idea to have it installed even if you don't use its commands directly.
@@ -670,6 +714,7 @@ We also use [[https://github.com/sebastiencs/company-box][company-box]] to furth
     :diminish projectile-mode
     :config (projectile-mode)
     :custom ((projectile-completion-system 'ivy))
+    :bind ("C-c v" . 'projectile-ag)
     :bind-keymap
     ("C-c p" . projectile-command-map)
     :init
@@ -688,7 +733,7 @@ We also use [[https://github.com/sebastiencs/company-box][company-box]] to furth
 [[https://magit.vc/][Magit]] is the best Git interface I've ever used.  Common Git operations are easy to execute quickly using Magit's command panel system.
 
 #+begin_src emacs-lisp
-
+  (use-package git-link)
   (use-package magit
     :custom
     (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
@@ -1063,13 +1108,29 @@ Still to be cleaned up, but for now, at least LSP is working for Go
   (exec-path-from-shell-initialize))
 
 (setq lsp-go-gopls-server-args '("-remote" "127.0.0.1:9999"))
-(use-package kubel)
 (use-package let-alist)
 (use-package flycheck
   :init (global-flycheck-mode))
 
 #+end_src
+* Kubectl
+
+#+begin_src emacs-lisp
+  (use-package kubel)
+  (rune/leader-keys
+    "kx" '(kubel-set-context :which-key "set context")
+    "kn" '(kubel-set-namespace :which-key "set namespace")
+    "ke" '(kubel-quick-edit :which-key "quick edit")
+  )
+
+
+
+#+end_src
 * Applications
+** Rest Client
+#+begin_src emacs-lisp
+(use-package restclient)
+#+end_src
 ** Chrome Edit Server
 #+begin_src emacs-lisp
 (use-package edit-server
@@ -1094,3 +1155,7 @@ This is an example of configuring another non-Emacs application using org-mode. 
   value=<<the-value()>>
 
 #+end_src
+
+* Issues
+** ag doesn't work, need to be able to search inside a project
+** kubectl doesn't work fast enough, probably need hydra
