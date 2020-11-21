@@ -5,6 +5,8 @@
 (defvar efs/default-font-size 180)
 (defvar efs/default-variable-font-size 180)
 
+(setq dw/is-termux nil)
+
 (load-file "~/code/personal/sensible-defaults.el/sensible-defaults.el")
 (sensible-defaults/use-all-settings)
 (sensible-defaults/use-all-keybindings)
@@ -45,10 +47,25 @@
 (put 'upcase-region 'disabled nil)                ; Enable upcase-region
 (set-default-coding-systems 'utf-8)               ; Default to utf-8 encoding
 
+;; Keep transient cruft out of ~/.emacs.d/
+(setq user-emacs-directory "~/.cache/emacs/"
+      backup-directory-alist `(("." . ,(expand-file-name "backups" user-emacs-directory)))
+      url-history-file (expand-file-name "url/history" user-emacs-directory)
+      auto-save-list-file-prefix (expand-file-name "auto-save-list/.saves-" user-emacs-directory)
+      projectile-known-projects-file (expand-file-name "projectile-bookmarks.eld" user-emacs-directory))
+
+;; Keep customization settings in a temporary file (thanks Ambrevar!)
+(setq custom-file
+      (if (boundp 'server-socket-dir)
+          (expand-file-name "custom.el" server-socket-dir)
+        (expand-file-name (format "emacs-custom-%s.el" (user-uid)) temporary-file-directory)))
+(load custom-file t)
+
 ;; Initialize package sources
 (require 'package)
 
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("melpa-stable" . "https://stable.melpa.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
                          ("elpa" . "https://elpa.gnu.org/packages/")))
 
@@ -62,6 +79,8 @@
 
 (require 'use-package)
 (setq use-package-always-ensure t)
+
+(server-start)
 
 (setq inhibit-startup-message t)
 
@@ -94,19 +113,27 @@
 ;; Set the variable pitch face
 (set-face-attribute 'variable-pitch nil :font "Cantarell" :height efs/default-variable-font-size :weight 'regular)
 
-;; Make ESC quit prompts
+(global-prettify-symbols-mode t)
+
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
-(use-package general
-  :config
-  (general-create-definer rune/leader-keys
-    :keymaps '(normal insert visual emacs)
-    :prefix "SPC"
-    :global-prefix "C-SPC")
+(global-set-key (kbd "C-M-u") 'universal-argument)
 
-  (rune/leader-keys
-    "t"  '(:ignore t :which-key "toggles")
-    "tt" '(counsel-load-theme :which-key "choose theme")))
+(defun dw/evil-hook ()
+  (dolist (mode '(custom-mode
+                  eshell-mode
+                  git-rebase-mode
+                  erc-mode
+                  circe-server-mode
+                  circe-chat-mode
+                  circe-query-mode
+                  sauron-mode
+                  term-mode))
+  (add-to-list 'evil-emacs-state-modes mode)))
+
+(defun dw/dont-arrow-me-bro ()
+  (interactive)
+  (message "Arrow keys are bad, you know?"))
 
 (use-package evil
   :init
@@ -114,7 +141,9 @@
   (setq evil-want-keybinding nil)
   (setq evil-want-C-u-scroll t)
   (setq evil-want-C-i-jump nil)
+  (setq evil-respect-visual-line-mode t)
   :config
+  (add-hook 'evil-mode-hook 'dw/evil-hook)
   (evil-mode 1)
   (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
   (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
@@ -123,23 +152,47 @@
   (evil-global-set-key 'motion "j" 'evil-next-visual-line)
   (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
 
+    ;; Disable arrow keys in normal and visual modes
+    (define-key evil-normal-state-map (kbd "<left>") 'dw/dont-arrow-me-bro)
+    (define-key evil-normal-state-map (kbd "<right>") 'dw/dont-arrow-me-bro)
+    (define-key evil-normal-state-map (kbd "<down>") 'dw/dont-arrow-me-bro)
+    (define-key evil-normal-state-map (kbd "<up>") 'dw/dont-arrow-me-bro)
+    (evil-global-set-key 'motion (kbd "<left>") 'dw/dont-arrow-me-bro)
+    (evil-global-set-key 'motion (kbd "<right>") 'dw/dont-arrow-me-bro)
+    (evil-global-set-key 'motion (kbd "<down>") 'dw/dont-arrow-me-bro)
+    (evil-global-set-key 'motion (kbd "<up>") 'dw/dont-arrow-me-bro)
+
   (evil-set-initial-state 'messages-buffer-mode 'normal)
   (evil-set-initial-state 'dashboard-mode 'normal))
 
 (use-package evil-collection
   :after evil
+  :custom
+  (evil-collection-outline-bind-tab-p nil)
   :config
   (evil-collection-init))
 
-(use-package evil-surround
+(use-package which-key
+  :init (which-key-mode)
+  :diminish which-key-mode
   :config
-  (global-evil-surround-mode 1))
+  (setq which-key-idle-delay 0.3))
 
-(setq frame-title-format '((:eval (projectile-project-name))))
+(use-package general
+  :config
+  (general-evil-setup t)
 
-(global-prettify-symbols-mode t)
+  (general-create-definer dw/leader-key-def
+    :keymaps '(normal insert visual emacs)
+    :prefix "SPC"
+    :global-prefix "C-SPC")
 
-(use-package command-log-mode)
+  (general-create-definer dw/ctrl-c-keys
+    :prefix "C-c"))
+
+(use-package use-package-chords
+  :disabled
+  :config (key-chord-mode 1))
 
 (use-package doom-themes
   :init (load-theme 'doom-gruvbox t))
@@ -206,7 +259,7 @@
   ("k" text-scale-decrease "out")
   ("f" nil "finished" :exit t))
 
-(rune/leader-keys
+(dw/leader-key-def
   "ts" '(hydra-text-scale/body :which-key "scale text"))
 
 (global-hl-line-mode)
@@ -369,6 +422,19 @@
 
   (efs/org-font-setup))
 
+(use-package evil-surround
+  :config
+  (global-evil-surround-mode 1))
+
+(use-package evil-org
+  :after org
+  :config
+  (add-hook 'org-mode-hook 'evil-org-mode)
+  (add-hook 'evil-org-mode-hook
+            (lambda () (evil-org-set-key-theme)))
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
+
 (use-package org-bullets
   :after org
   :hook (org-mode . org-bullets-mode)
@@ -386,9 +452,11 @@
 (org-babel-do-load-languages
   'org-babel-load-languages
   '((emacs-lisp . t)
+    (ditaa . t)
     (python . t)))
 
 (push '("conf-unix" . conf-unix) org-src-lang-modes)
+(setq org-ditaa-jar-path "~/bin/ditaa0_9.jar")
 
 ;; This is needed as of Org 9.2
 (require 'org-tempo)
@@ -423,6 +491,8 @@
   :config
   (lsp-enable-which-key-integration t))
 
+(setq read-process-output-max (* 1024 1024)) ;; 1mb
+
 (use-package lsp-ui
   :hook (lsp-mode . lsp-ui-mode)
   :custom
@@ -432,6 +502,10 @@
   :after lsp)
 
 (use-package lsp-ivy)
+
+(use-package ccls
+  :hook ((c-mode c++-mode objc-mode cuda-mode) .
+         (lambda () (require 'ccls) (lsp))))
 
 (use-package typescript-mode
   :mode "\\.ts\\'"
@@ -483,6 +557,7 @@
 ;; - https://magit.vc/manual/forge/Token-Creation.html#Token-Creation
 ;; - https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started
 (use-package forge)
+(use-package git-gutter)
 
 (use-package evil-nerd-commenter
   :bind ("M-/" . evilnc-comment-or-uncomment-lines))
@@ -493,6 +568,27 @@
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
+
+(use-package rainbow-delimiters
+  :hook
+  (prog-mode . rainbow-delimiters-mode))
+
+(use-package smartparens
+  :bind
+  ("<M-backspace>" . sp-unwrap-sexp)
+  ("<M-left>" . sp-forward-barf-sexp)
+  ("<M-right>" . sp-forward-slurp-sexp)
+  ("<M-S-left>" . sp-backward-slurp-sexp)
+  ("<M-S-right>" . sp-backward-barf-sexp)
+  :hook
+  (after-init . smartparens-global-mode)
+  :custom
+  (sp-highlight-pair-overlay nil)
+  (sp-highlight-wrap-overlay nil)
+  (sp-highlight-wrap-tag-overlay nil)
+  :config
+  (show-paren-mode 0)
+  (require 'smartparens-config))
 
 (use-package term
   :config
@@ -679,7 +775,7 @@
   :init (global-flycheck-mode))
 
 (use-package kubel)
-(rune/leader-keys
+(dw/leader-key-def
   "kx" '(kubel-set-context :which-key "set context")
   "kn" '(kubel-set-namespace :which-key "set namespace")
   "ke" '(kubel-quick-edit :which-key "quick edit")
@@ -750,6 +846,15 @@
 :config (edit-server-start)
 )
 ;; (use-package edit-server-htmlize)
+
+(defun my-copy-to-next-window (b e)
+  "Copy text in the region to next window."
+  (interactive "r")
+  (pcase (window-list)
+    (`(,w0 ,w1)
+     (with-selected-window w1
+       (insert-buffer-substring (window-buffer w0) b e)))
+    (t (user-error "Only works with 2 windows"))))
 
 (defun hrs/kill-current-buffer ()
   "Kill the current buffer without prompting."
